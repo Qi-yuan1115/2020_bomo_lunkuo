@@ -375,8 +375,7 @@ public:
 		void Bomo_Huatu_LeftMoveArray(double * ptr, size_t length2, double * data);
 		void Bomo_Huatu_LeftMoveArray_shuju(double * ptr, size_t length2, double data);
 
-		CChartCtrl Bomo_ChartCtrl_R;//坐标系类名
-
+		CChartCtrl Bomo_ChartCtrl_R;//坐标系类名没用到
 
 		CChartCtrl Bomo_ChartCtrl_R2;//坐标系类名
 		//波磨左边坐标系
@@ -395,4 +394,5 @@ public:
 
 		int Bomo_paint_count_pre;
 		int Bomo_paint_count_beh;
+		afx_msg void OnBnClickedButton11();
 };

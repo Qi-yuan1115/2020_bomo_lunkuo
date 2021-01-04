@@ -56,6 +56,8 @@
 #define Bomo_changbo_RMS_dum (int)(Bomo_Chuli_lengthe/Bomo_changbo_RMS_length) //每15m计算长波次数
 #define Bomo_zhongbo_RMS_dum (int)(Bomo_Chuli_lengthe/Bomo_zhongbo_RMS_length) //每15m计算中波次数
 #define Bomo_duanbo_RMS_dum (int)(Bomo_Chuli_lengthe/Bomo_duanbo_RMS_length) //单/每15m计算短波次数
+
+#define  yichangzhi 10 //超量程值
 //超限结果
 double Bomo_RMS_30_100mm_R[Bomo_duanbo_RMS_dum], Bomo_RMS_100_300mm_R[Bomo_zhongbo_RMS_dum], Bomo_RMS_300_1000mm_R[Bomo_changbo_RMS_dum];
 
@@ -746,6 +748,7 @@ ON_STN_CLICKED(IDC_BMSTATA1, &CHighPrecisionDlg::OnStnClickedBmstata1)
 ON_STN_CLICKED(IDC_BMSTATA5, &CHighPrecisionDlg::OnStnClickedBmstata5)
 ON_WM_TIMER()
 ON_STN_CLICKED(IDC_STATIC_SYSTEMSTATUS, &CHighPrecisionDlg::OnStnClickedStaticSystemstatus)
+ON_BN_CLICKED(IDC_BUTTON11, &CHighPrecisionDlg::OnBnClickedButton11)
 END_MESSAGE_MAP()
 
 
@@ -906,22 +909,20 @@ BOOL CHighPrecisionDlg::OnInitDialog()
 	CChartAxis *pAxis = NULL;
 	//底部的参数
 	pAxisBottom_bomo_R = Bomo_ChartCtrl_R2.CreateStandardAxis(CChartCtrl::BottomAxis);
-	//pAxisBottom1->SetAutomatic(true); 
 	pAxisBottom_bomo_R->GetLabel()->SetText(_T("里程(m)"));
 	pAxisBottom_bomo_R->SetAutomatic(true);
 	//pAxisBottom_bomo_R->SetMinMax(-30, 40);
 
 
 
-	//左边的线条
+	//左边的参数
 	pAxisLeft_bomo_R = Bomo_ChartCtrl_R2.CreateStandardAxis(CChartCtrl::LeftAxis);
-	//pAxisBottom1->SetAutomatic(true); 
 	pAxisLeft_bomo_R->GetLabel()->SetText(_T("幅度(mm)"));
 	pAxisLeft_bomo_R->SetAutomatic(true);
 	//pAxisLeft_bomo_R->SetMinMax(-30, 40);
 	//CChartAxis *pAxis = NULL;
 
-
+	//图片的方法
 	//CRect Bomo_rect;
 	//CChartAxis *Bomo_pAxis = NULL;
 	//CChartDateTimeAxis* Bomo_pDateAxis = NULL;
@@ -17336,6 +17337,8 @@ void CHighPrecisionDlg::OnTbtClickstart()
 {
 	// TODO: 在此添加命令处理程序代码
 	//OnBnClickedButtonStart();
+
+
 	AfxBeginThread((AFX_THREADPROC)Bomo_Shujun_Caiji_01, this);//波磨开始
 	AfxBeginThread((AFX_THREADPROC)Bomo_Shujun_Caiji_02, this);//波磨开始
 	AfxBeginThread((AFX_THREADPROC)Bomo_Shujun_Caiji_03, this);//波磨开始
@@ -17364,6 +17367,7 @@ void CHighPrecisionDlg::OnTbtClickbomo()
 {
 	m_ChartCtrl_LeftDown.ShowWindow(FALSE);//
 	m_ChartCtrl_RightDown.ShowWindow(FALSE);
+
 
 	Bomo_ChartCtrl_R2.ShowWindow(TRUE);//
 	Bomo_ChartCtrl_R.ShowWindow(TRUE);
@@ -17416,7 +17420,7 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_01(LPVOID pParam)
 	CString PSD_strFileName01;
 
 	TCurrentTime = TCurrentTime.GetCurrentTime();
-	strTime.Format(_T("平顺度输出\\传感器1平顺度输出--%04d%02d%02d-%02d%02d%02d"), TCurrentTime.GetYear(), TCurrentTime.GetMonth(), TCurrentTime.GetDay(),
+	strTime.Format(_T("平顺度输出\\单个传感器原始数据\\传感器1平顺度输出--%04d%02d%02d-%02d%02d%02d"), TCurrentTime.GetYear(), TCurrentTime.GetMonth(), TCurrentTime.GetDay(),
 		TCurrentTime.GetHour(), TCurrentTime.GetMinute(), TCurrentTime.GetSecond());
 	PSD_strFileName01.Format(_T("%s.txt"), strTime);
 
@@ -17448,8 +17452,11 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_01(LPVOID pParam)
 	while (!Bomo_Flag_bomo_Caiji_R)	// 10 cycles
 	{
 
-		//if ((err1 = Bomo_sensor_R1.DataAvail1((int)sensor1, &avail1)<0))
+		//if ((err1 = Bomo_sensor_R1.DataAvail1((int)sensor1, &avail1) < 0))
+		//{
 		//	AfxMessageBox(_T("打开传感器1失败"));
+		//	break;
+		//}
 		////printf("Values avail: %04d\n", avail);
 
 		//Bomo_sensor_R1.TransferData1((int)sensor1, NULL, data, sizeof(data), &read1);
@@ -17469,6 +17476,10 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_01(LPVOID pParam)
 		read1 = 400;
 		Sleep(1000);
 
+		//double bila;
+
+
+
 
 
 		//数据采集读取到文件
@@ -17481,8 +17492,11 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_01(LPVOID pParam)
 			caiji_length++;
 		}
 
+
+
 		for (int i = 0; i<read1; i++)
 			data_copy[i] = (float)data[i];
+
 
 		//存在缓存
 		if (read > 0)
@@ -17501,7 +17515,7 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_01(LPVOID pParam)
 
 
 
-	Bomo_sensor_R1.Cleanup(sensor1);
+	//Bomo_sensor_R1.Cleanup(sensor1);
 	//AfxMessageBox(_T("传感器1采集结束"));
 
 
@@ -17528,7 +17542,7 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_02(LPVOID pParam)
 	int caiji_length = 0;
 
 	TCurrentTime = TCurrentTime.GetCurrentTime();
-	strTime.Format(_T("平顺度输出\\传感器2平顺度输出--%04d%02d%02d-%02d%02d%02d"), TCurrentTime.GetYear(), TCurrentTime.GetMonth(), TCurrentTime.GetDay(),
+	strTime.Format(_T("平顺度输出\\单个传感器原始数据\\传感器2平顺度输出--%04d%02d%02d-%02d%02d%02d"), TCurrentTime.GetYear(), TCurrentTime.GetMonth(), TCurrentTime.GetDay(),
 		TCurrentTime.GetHour(), TCurrentTime.GetMinute(), TCurrentTime.GetSecond());
 	PSD_strFileName01.Format(_T("%s.txt"), strTime);
 
@@ -17561,21 +17575,26 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_02(LPVOID pParam)
 	while (!Bomo_Flag_bomo_Caiji_R)	// 10 cycles
 	{
 
-		//if ((err2 = Bomo_sensor_R2.DataAvail1((int)sensor2, &avail1)<0))
+		//if ((err2 = Bomo_sensor_R2.DataAvail1((int)sensor2, &avail1) < 0))
+
+		//{
 		//	AfxMessageBox(_T("打开传感器2失败"));
+		//	break;
+		//}
 		////printf("Values avail: %04d\n", avail);
 
 		//Bomo_sensor_R2.TransferData1((int)sensor2, NULL, data, sizeof(data), &read1);
 	
 
 
-		//模拟
+		////模拟
 		for (int i = 0; i <400; i++)
 		{
 			data[i] = cos(i);
 		}
 		read1 = 400;
 		Sleep(1000);
+
 
 		//数据采集读取到文件
 		fprintf(fpz11, " 传感器采集数据记录 \n");
@@ -17617,7 +17636,7 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_02(LPVOID pParam)
 
 
 
-	Bomo_sensor_R2.Cleanup(sensor2);
+	//Bomo_sensor_R2.Cleanup(sensor2);
 	//AfxMessageBox(_T("传感器2采集结束"));
 	return 0;
 
@@ -17638,7 +17657,7 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_03(LPVOID pParam)
 	CString PSD_strFileName01;
 
 	TCurrentTime = TCurrentTime.GetCurrentTime();
-	strTime.Format(_T("平顺度输出\\传感器3平顺度输出--%04d%02d%02d-%02d%02d%02d"), TCurrentTime.GetYear(), TCurrentTime.GetMonth(), TCurrentTime.GetDay(),
+	strTime.Format(_T("平顺度输出\\单个传感器原始数据\\传感器3平顺度输出--%04d%02d%02d-%02d%02d%02d"), TCurrentTime.GetYear(), TCurrentTime.GetMonth(), TCurrentTime.GetDay(),
 		TCurrentTime.GetHour(), TCurrentTime.GetMinute(), TCurrentTime.GetSecond());
 	PSD_strFileName01.Format(_T("%s.txt"), strTime);
 
@@ -17673,7 +17692,10 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_03(LPVOID pParam)
 	{
 
 		//if ((err3 = Bomo_sensor_R3.DataAvail1((int)sensor3, &avail1)<0))
+		//{ 
 		//	AfxMessageBox(_T("打开传感器3失败"));
+		//	break;
+		//}
 		////printf("Values avail: %04d\n", avail);
 
 		//Bomo_sensor_R3.TransferData1((int)sensor3, NULL, data, sizeof(data), &read1);
@@ -17725,7 +17747,7 @@ UINT CHighPrecisionDlg::Bomo_Shujun_Caiji_03(LPVOID pParam)
 
 
 
-	Bomo_sensor_R3.Cleanup(sensor3);
+	//Bomo_sensor_R3.Cleanup(sensor3);
 	//AfxMessageBox(_T("传感器3采集结束"));
 
 
@@ -17851,13 +17873,13 @@ UINT CHighPrecisionDlg::Bomo_Shujun_to_txt(LPVOID pParam)
 	CString TXT_strFileName;
 
 	TCurrentTime = TCurrentTime.GetCurrentTime();
-	strTime.Format(("平顺度输出\\三传感器原始数据--%04d%02d%02d-%02d%02d%02d"), TCurrentTime.GetYear(), TCurrentTime.GetMonth(), TCurrentTime.GetDay(),
+	strTime.Format(("平顺度输出\\传感器原始数据--%04d%02d%02d-%02d%02d%02d"), TCurrentTime.GetYear(), TCurrentTime.GetMonth(), TCurrentTime.GetDay(),
 		TCurrentTime.GetHour(), TCurrentTime.GetMinute(), TCurrentTime.GetSecond());
 	TXT_strFileName.Format(("%s.txt"), strTime);
 
 	//PSD_strFileName.Format(("%s"), strFileName);
 
-	while (!Bomo_Flag_bomo_Caiji_R)
+	while (1)
 	{
 
 		//原始数据存储线程
@@ -17874,10 +17896,10 @@ UINT CHighPrecisionDlg::Bomo_Shujun_to_txt(LPVOID pParam)
 				//return 0;
 			}
 
-			fprintf(fpz22, "   %dm__%dm \n", (Bomo_SJCJ_sensor_count_R - 1)*Bomo_Chuli_lengthe, (Bomo_SJCJ_sensor_count_R)*Bomo_Chuli_lengthe);
+			//fprintf(fpz22, "   %dm__%dm \n", (Bomo_SJCJ_sensor_count_R - 1)*Bomo_Chuli_lengthe, (Bomo_SJCJ_sensor_count_R)*Bomo_Chuli_lengthe);
 			for (int i = 0; i <  Bomo_length; i++)
 			{
-				fprintf(fpz22, "  %f ,  %f, %f \n", Bomo_sensor_data_R1[i], Bomo_sensor_data_R2[i], Bomo_sensor_data_R3[i]);
+				fprintf(fpz22, "  %0.3f , %f ,  %f, %f \n", i*Bomo_Caiyang_jiange,  Bomo_sensor_data_R1[i], Bomo_sensor_data_R2[i], Bomo_sensor_data_R3[i]);
 			}
 
 			fclose(fpz22);
@@ -17900,53 +17922,7 @@ UINT CHighPrecisionDlg::Bomo_Shujun_to_txt(LPVOID pParam)
 
 void CHighPrecisionDlg::OnStnClickedStaticSystemstatus()
 {
-	// TODO: Add your control notification handler code here
 
-	int Baudrate = 921600;//设置波特率
-	double Sampleshape = 4;//设置采样频率
-
-
-	Bomo_sensor_R1.CreateSensorInstance1(SENSOR_ILD1420, &sensor1);
-	string com3 = "Com1";
-	//int Baudrate = 921600;//设置波特率
-	//double Sampleshape = 4;//设置采样频率
-
-	if (!sensor1)
-		AfxMessageBox(_T("1初始化失败"));
-
-	if ((err1 = Bomo_sensor_R1.Open_1420(sensor1, com3, Baudrate))<0)
-		AfxMessageBox(_T("打开传感器1失败"));
-	if ((err1 = Bomo_sensor_R1.SetSamplerate(sensor1, Sampleshape, Baudrate))<0)//设置参数
-		AfxMessageBox(_T("设置波特率失败1失败"));
-
-
-
-
-
-	Bomo_sensor_R3.CreateSensorInstance1(SENSOR_ILD1420, &sensor3);
-	string com1 = "Com5";
-
-
-	if (!sensor3)
-		AfxMessageBox(_T("3初始化失败"));
-
-	if ((err3 = Bomo_sensor_R3.Open_1420(sensor3, com1, Baudrate))<0)
-		AfxMessageBox(_T("打开传感器3失败"));
-	if ((err3 = Bomo_sensor_R3.SetSamplerate(sensor3, Sampleshape, Baudrate))<0)//设置参数
-		AfxMessageBox(_T("设置波特率失败3失败"));
-
-	Bomo_sensor_R2.CreateSensorInstance1(SENSOR_ILD1420, &sensor2);
-	string com2 = "Com3";
-	//int Baudrate = 921600;//设置波特率
-	//double Sampleshape = 4;//设置采样频率
-
-	if (!sensor2)
-		AfxMessageBox(_T("2初始化失败"));
-
-	if ((err2 = Bomo_sensor_R2.Open_1420(sensor2, com2, Baudrate))<0)
-		AfxMessageBox(_T("打开传感器2失败"));
-	if ((err2 = Bomo_sensor_R2.SetSamplerate(sensor2, Sampleshape, Baudrate))<0)//设置参数
-		AfxMessageBox(_T("设置波特率失败2失败"));
 
 
 
@@ -17968,6 +17944,29 @@ void CHighPrecisionDlg::Bomo_Calculate()
 				{
 					for (int i = 0; i < Bomo_length; i++)
 					{
+
+
+							if (isinf(Bomo_sensor_data_R1[i]))
+							{
+
+								Bomo_sensor_data_R1[i] = yichangzhi;
+
+							}
+							if (isinf(Bomo_sensor_data_R2[i]))
+							{
+
+								Bomo_sensor_data_R2[i] = yichangzhi;
+
+							}
+							if (isinf(Bomo_sensor_data_R3[i]))
+							{
+
+								Bomo_sensor_data_R3[i] = yichangzhi;
+
+							}
+
+
+
 						Bomo_sensor_jisun_data_R1[i] = (double)Bomo_sensor_data_R1[i];
 						Bomo_sensor_jisun_data_R2[i] = (double)Bomo_sensor_data_R2[i];
 						Bomo_sensor_jisun_data_R3[i] = (double)Bomo_sensor_data_R3[i];
@@ -18185,20 +18184,20 @@ void CHighPrecisionDlg::Bomo_Calculate_shuju_to_txt()
 
 				if (Bomo_SJCJ_sensor_count_R == 0)
 				{
-					fprintf(fpz22, " 长波       ，    中波       ，   短波 \n");
+					fprintf(fpz22, "    距离    : 长波，         中波，        短波 \n");
 				}
 
-				fprintf(fpz22, "   %dm__%dm \n", (Bomo_SJCJ_sensor_count_R)*Bomo_Chuli_lengthe, (Bomo_SJCJ_sensor_count_R + 1)*Bomo_Chuli_lengthe);
+				//fprintf(fpz22, "   %dm__%dm \n", (Bomo_SJCJ_sensor_count_R)*Bomo_Chuli_lengthe, (Bomo_SJCJ_sensor_count_R + 1)*Bomo_Chuli_lengthe);
 				for (int i = 0; i < Bomo_length; i++)
 				{
-					fprintf(fpz22, "  %f ,  %f, %f \n", Bomo_a_1_3Hz_signal_R[i], Bomo_a_3_10Hz_signal_R[i], Bomo_a_10_100Hz_signal_R[i]);
+					fprintf(fpz22, "  %0.3fm: %f ,  %f, %f \n", i*Bomo_Caiyang_jiange, Bomo_a_1_3Hz_signal_R[i], Bomo_a_3_10Hz_signal_R[i], Bomo_a_10_100Hz_signal_R[i]);
 				}
 
 
 				//长波RMS值
 				for (int i1 = 0; i1 < Bomo_changbo_RMS_dum; i1++)
 				{
-					fprintf(fpz_changbo, " %d ,  %f \n", Bomo_SJCJ_sensor_count_R*Bomo_changbo_RMS_dum +i1, Bomo_RMS_300_1000mm_R[i1]);
+					fprintf(fpz_changbo, " %d-%dm :  %f \n",( Bomo_SJCJ_sensor_count_R*Bomo_changbo_RMS_dum +i1)*5, (Bomo_SJCJ_sensor_count_R*Bomo_changbo_RMS_dum + i1 + 1) * 5, Bomo_RMS_300_1000mm_R[i1]);
 				}
 
 
@@ -18206,18 +18205,18 @@ void CHighPrecisionDlg::Bomo_Calculate_shuju_to_txt()
 				//中波RMS值
 				for (int i2 = 0; i2 < Bomo_zhongbo_RMS_dum; i2++)
 				{
-					fprintf(fpz_zhongbo, " %d ,  %f \n", Bomo_SJCJ_sensor_count_R*Bomo_zhongbo_RMS_dum + i2, Bomo_RMS_100_300mm_R[i2]);
+					fprintf(fpz_zhongbo, " %0.1f-%0.1fm : %f \n", (Bomo_SJCJ_sensor_count_R*Bomo_zhongbo_RMS_dum + i2)*0.15, (Bomo_SJCJ_sensor_count_R*Bomo_zhongbo_RMS_dum + i2 +1)*0.15, Bomo_RMS_100_300mm_R[i2]);
 				}
 
 				//短波RMS值
 				for (int i3 = 0; i3 < Bomo_duanbo_RMS_dum; i3++)
 				{
-					fprintf(fpz_duanbo, "  %d ,  %f \n", Bomo_SJCJ_sensor_count_R*Bomo_duanbo_RMS_dum + i3, Bomo_RMS_30_100mm_R[i3]);
+					fprintf(fpz_duanbo, "  %0.1f-%0.1fm :  %f \n", (Bomo_SJCJ_sensor_count_R*Bomo_duanbo_RMS_dum + i3)*0.5, (Bomo_SJCJ_sensor_count_R*Bomo_duanbo_RMS_dum + i3 +1)*0.5, Bomo_RMS_30_100mm_R[i3]);
 				}
 
 				//超限比
 				
-					fprintf(fpz_chaoxianbi, "  %d :  %d , %d , %d  \n", Bomo_SJCJ_sensor_count_R*Bomo_Chuli_lengthe, Bomo_Chaoxianbi_30_100mm_R, Bomo_Chonxianbi_100_300mm_R, Bomo_Chaoxianbi_300_1000mm_R);
+					fprintf(fpz_chaoxianbi, " %d-%dm :  %d , %d , %d  \n",  Bomo_SJCJ_sensor_count_R*Bomo_Chuli_lengthe, (Bomo_SJCJ_sensor_count_R +1)*Bomo_Chuli_lengthe, Bomo_Chaoxianbi_30_100mm_R, Bomo_Chonxianbi_100_300mm_R, Bomo_Chaoxianbi_300_1000mm_R);
 
 
 
@@ -18519,7 +18518,7 @@ UINT CHighPrecisionDlg::Bomo_paint_bomo(LPVOID pParam)
 
 
 		Bomo_Flag_bomo_Jisuan_R =TRUE;
-		dlg->Bomo_Calculate();//记得删除
+		//dlg->Bomo_Calculate();//记得删除
 
 
 		Sleep(10000);
@@ -18533,3 +18532,69 @@ UINT CHighPrecisionDlg::Bomo_paint_bomo(LPVOID pParam)
 
 
 
+
+//初始化
+void CHighPrecisionDlg::OnBnClickedButton11()
+{
+	// TODO: Add your control notification handler code here
+
+	// TODO: Add your control notification handler code here
+
+	int Baudrate = 921600;//设置波特率
+	double Sampleshape = 4;//设置采样频率
+
+
+	Bomo_sensor_R1.CreateSensorInstance1(SENSOR_ILD1420, &sensor1);
+	string com3 = "Com1";
+	//int Baudrate = 921600;//设置波特率
+	//double Sampleshape = 4;//设置采样频率
+
+	/*if (!sensor1)
+		AfxMessageBox(_T("1初始化失败"));*/
+
+	if ((err1 = Bomo_sensor_R1.Open_1420(sensor1, com3, Baudrate))<0)
+	{
+		AfxMessageBox(_T("打开传感器1失败"));
+	
+	}
+	//if ((err1 = Bomo_sensor_R1.SetSamplerate(sensor1, Sampleshape, Baudrate))<0)//设置参数
+	//	AfxMessageBox(_T("设置波特率失败1失败"));
+
+
+
+	Bomo_sensor_R2.CreateSensorInstance1(SENSOR_ILD1420, &sensor2);
+	string com2 = "Com3";
+	//int Baudrate = 921600;//设置波特率
+	//double Sampleshape = 4;//设置采样频率
+
+	/*if (!sensor2)
+	AfxMessageBox(_T("2初始化失败"));*/
+
+	if ((err2 = Bomo_sensor_R2.Open_1420(sensor2, com2, Baudrate))<0)
+	{
+		AfxMessageBox(_T("打开传感器2失败"));
+		
+	}
+	//if ((err2 = Bomo_sensor_R2.SetSamplerate(sensor2, Sampleshape, Baudrate))<0)//设置参数
+	//	AfxMessageBox(_T("设置波特率失败2失败"));
+;
+
+
+	Bomo_sensor_R3.CreateSensorInstance1(SENSOR_ILD1420, &sensor3);
+	string com1 = "Com5";
+
+
+	/*if (!sensor3)
+		AfxMessageBox(_T("3初始化失败"));*/
+
+	if ((err3 = Bomo_sensor_R3.Open_1420(sensor3, com1, Baudrate))<0)
+	{ 
+		AfxMessageBox(_T("打开传感器3失败"));
+		
+    }
+	//if ((err3 = Bomo_sensor_R3.SetSamplerate(sensor3, Sampleshape, Baudrate))<0)//设置参数
+	//	AfxMessageBox(_T("设置波特率失败3失败"));
+
+
+
+}
