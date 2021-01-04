@@ -74,12 +74,14 @@ double Bomo_sensor_Pre_data_R1[Bomo_length];
 double Bomo_sensor_Pre_data_R2[Bomo_length];
 double Bomo_sensor_Pre_data_R3[Bomo_length];
 
+//波磨复原结果
+double Bomo_fuyaunzhi[Bomo_length];
 double Bomo_a_1_3Hz_signal_R[Bomo_length];
 double Bomo_a_3_10Hz_signal_R[Bomo_length];
 double Bomo_a_10_100Hz_signal_R[Bomo_length];
 
 
-
+//波磨复原结果
 int Bomo_PSD_jiegou_R = 0;
 int Bomo_Chaoxianbi_30_100mm_R = 0;
 int Bomo_Chonxianbi_100_300mm_R = 0;
@@ -122,11 +124,12 @@ BOOL Bomo_Flag_huantu_vector_read_or_write_R = FALSE;//传感器采集完成准备画图
 BOOL Bomo_Flag_huantu_Qudengdai_R = FALSE;//传感器采集完成准备画图
 BOOL Bomo_Flag_huantu_DrawMoving_R = FALSE;//传感器采集完成准备画图
 
-
+vector<float> Bomo_huantu_vector_read_or_write_fuyuanzhi_R;//画图用与处理的数组中间数组
 vector<float> Bomo_huantu_vector_read_or_write_sensor_R1;//画图用与处理的数组中间数组
 vector<float> Bomo_huantu_vector_read_or_write_sensor_R2;//画图用与处理的数组
 vector<float> Bomo_huantu_vector_read_or_write_sensor_R3;//画图用与处理的数组
 //用于画图传递
+double Bomo_huantu_fuyuanzh_R[Bomo_length];
 double Bomo_huantu_a_1_3Hz_signal_R[Bomo_length];//用于画图的数组
 double Bomo_huantu_a_3_10Hz_signal_R[Bomo_length];
 double Bomo_huantu_a_10_100Hz_signal_R[Bomo_length];
@@ -138,10 +141,12 @@ const int Bomo_huatu_yidong_length = 30;//每次移动得长度
 const size_t Bomo_paint_arrayLength = Bomo_Xianshi_dum;
 //X和y坐标
 
+double Bomo_paint_X_R_All[Bomo_paint_arrayLength];
 double Bomo_paint_X_R1[Bomo_paint_arrayLength];
 double Bomo_paint_X_R2[Bomo_paint_arrayLength];
 double Bomo_paint_X_R3[Bomo_paint_arrayLength];
 
+double Bomo_paint_Y_TeeChartArray_R_All[Bomo_paint_arrayLength];
 double Bomo_paint_Y_TeeChartArray_R1[Bomo_paint_arrayLength];
 double Bomo_paint_Y_TeeChartArray_R2[Bomo_paint_arrayLength];
 double Bomo_paint_Y_TeeChartArray_R3[Bomo_paint_arrayLength];
@@ -17988,7 +17993,7 @@ void CHighPrecisionDlg::Bomo_Calculate()
 
 												/*数据计算*/
 					HINSTANCE hDll1;//句柄
-					typedef void(*PSD_Calculate)(double[], double[], double[], int, double *, double *, double *);
+					typedef void(*PSD_Calculate)(double[], double[], double[], int, double *, double *, double *, double *);
 					PSD_Calculate Calculate;//函数指针
 
 											/*数据输出*/
@@ -18016,7 +18021,7 @@ void CHighPrecisionDlg::Bomo_Calculate()
 					if (hDll1)
 					{
 						Calculate = (PSD_Calculate)GetProcAddress(hDll1, "PSD_Calculate");//得到所加载DLL模块中函数的地址													
-						Calculate(Bomo_sensor_Pre_data_R1, Bomo_sensor_Pre_data_R2, Bomo_sensor_Pre_data_R3, Bomo_length, Bomo_a_1_3Hz_signal_R, Bomo_a_3_10Hz_signal_R, Bomo_a_10_100Hz_signal_R);
+						Calculate(Bomo_sensor_Pre_data_R1, Bomo_sensor_Pre_data_R2, Bomo_sensor_Pre_data_R3, Bomo_length, Bomo_fuyaunzhi,Bomo_a_1_3Hz_signal_R, Bomo_a_3_10Hz_signal_R, Bomo_a_10_100Hz_signal_R);
 						FreeLibrary(hDll1);//释放已经加载的DLL模块
 					}
 
@@ -18055,6 +18060,7 @@ void CHighPrecisionDlg::Bomo_Calculate()
 				{
 					for (int i = 0; i < Bomo_length; i++)
 					{
+						Bomo_huantu_vector_read_or_write_fuyuanzhi_R.push_back(Bomo_fuyaunzhi[i]);
 						Bomo_huantu_vector_read_or_write_sensor_R1.push_back(Bomo_a_1_3Hz_signal_R[i]);
 						Bomo_huantu_vector_read_or_write_sensor_R2.push_back(Bomo_a_3_10Hz_signal_R[i]);
 						Bomo_huantu_vector_read_or_write_sensor_R3.push_back(Bomo_a_10_100Hz_signal_R[i]);
@@ -18184,13 +18190,13 @@ void CHighPrecisionDlg::Bomo_Calculate_shuju_to_txt()
 
 				if (Bomo_SJCJ_sensor_count_R == 0)
 				{
-					fprintf(fpz22, "    距离    : 长波，         中波，        短波 \n");
+					fprintf(fpz22, "    距离    : 复原值，        长波，         中波，        短波 \n");
 				}
 
 				//fprintf(fpz22, "   %dm__%dm \n", (Bomo_SJCJ_sensor_count_R)*Bomo_Chuli_lengthe, (Bomo_SJCJ_sensor_count_R + 1)*Bomo_Chuli_lengthe);
 				for (int i = 0; i < Bomo_length; i++)
 				{
-					fprintf(fpz22, "  %0.3fm: %f ,  %f, %f \n", i*Bomo_Caiyang_jiange, Bomo_a_1_3Hz_signal_R[i], Bomo_a_3_10Hz_signal_R[i], Bomo_a_10_100Hz_signal_R[i]);
+					fprintf(fpz22, "  %0.3fm: %f , %f ,  %f, %f \n", i*Bomo_Caiyang_jiange, Bomo_fuyaunzhi[i],Bomo_a_1_3Hz_signal_R[i], Bomo_a_3_10Hz_signal_R[i], Bomo_a_10_100Hz_signal_R[i]);
 				}
 
 
@@ -18425,6 +18431,7 @@ void CHighPrecisionDlg::OnTimer(UINT_PTR nIDEvent)
 
 			for (int i = 0; i < Bomo_length; i++)
 			{
+				Bomo_huantu_fuyuanzh_R[i] = Bomo_huantu_vector_read_or_write_fuyuanzhi_R[i];
 				Bomo_huantu_a_1_3Hz_signal_R[i] = Bomo_huantu_vector_read_or_write_sensor_R1[i];
 				Bomo_huantu_a_3_10Hz_signal_R[i] = Bomo_huantu_vector_read_or_write_sensor_R2[i];
 				Bomo_huantu_a_10_100Hz_signal_R[i] = Bomo_huantu_vector_read_or_write_sensor_R3[i];
@@ -18436,6 +18443,7 @@ void CHighPrecisionDlg::OnTimer(UINT_PTR nIDEvent)
 				Sleep(1000);
 
 			//除去已经处理完的数据
+			Bomo_huantu_vector_read_or_write_fuyuanzhi_R.erase(Bomo_huantu_vector_read_or_write_fuyuanzhi_R.begin(), Bomo_huantu_vector_read_or_write_fuyuanzhi_R.begin() + Bomo_length);
 			Bomo_huantu_vector_read_or_write_sensor_R1.erase(Bomo_huantu_vector_read_or_write_sensor_R1.begin(), Bomo_huantu_vector_read_or_write_sensor_R1.begin() + Bomo_length);
 			Bomo_huantu_vector_read_or_write_sensor_R2.erase(Bomo_huantu_vector_read_or_write_sensor_R2.begin(), Bomo_huantu_vector_read_or_write_sensor_R2.begin() + Bomo_length);
 			Bomo_huantu_vector_read_or_write_sensor_R3.erase(Bomo_huantu_vector_read_or_write_sensor_R3.begin(), Bomo_huantu_vector_read_or_write_sensor_R3.begin() + Bomo_length);
@@ -18453,6 +18461,9 @@ void CHighPrecisionDlg::OnTimer(UINT_PTR nIDEvent)
 					Bomo_paint_X_R1[i] = i;
 					Bomo_paint_X_R2[i] = i;
 					Bomo_paint_X_R3[i] = i;
+					Bomo_paint_X_R_All[i] = i;
+
+					Bomo_paint_Y_TeeChartArray_R_All[i] = Bomo_huantu_fuyuanzh_R[i];
 					Bomo_paint_Y_TeeChartArray_R1[i] = Bomo_huantu_a_1_3Hz_signal_R[i];
 					Bomo_paint_Y_TeeChartArray_R2[i] = Bomo_huantu_a_3_10Hz_signal_R[i];
 					Bomo_paint_Y_TeeChartArray_R3[i] = Bomo_huantu_a_10_100Hz_signal_R[i];
